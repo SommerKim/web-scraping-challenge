@@ -7,11 +7,13 @@ from splinter import Browser
 from bs4 import BeautifulSoup as bs
 from webdriver_manager.chrome import ChromeDriverManager
 
-def scrape ():
-
+def init_browser():
     executable_path = {'executable_path': ChromeDriverManager().install()}
-    browser = Browser('chrome', **executable_path, headless=False)
-    
+    return Browser('chrome', **executable_path, headless=False)
+
+def scrape ():
+    browser = init_browser()
+
     # ## NASA Mars News
     url = "https://mars.nasa.gov/news"
     browser.visit(url)
@@ -20,11 +22,10 @@ def scrape ():
 
     # Find first list item in class 'slide'
     articles = soup.find_all('li', class_='slide')[0]
-    print(articles.prettify())
 
     # Within class 'slide,' find the headline in class 'content_title'
     headline = articles.find(class_='content_title').text
-    
+
     # Within class 'slide,' find the paragraph in class 'article_teaser_body'
     paragraph = articles.find(class_='article_teaser_body').text
     
@@ -37,7 +38,6 @@ def scrape ():
 
     # Look into the header where the image is coded
     image = soup.find_all('div', class_='header')[0]
-    print(image.prettify())
 
     # Find image source under class 'headerimage fade-in'
     featured_image = image.find('img', class_='headerimage fade-in')
@@ -90,23 +90,26 @@ def scrape ():
 
     # Loop through results on all four pages
     for result in results:
-
+        
         # Loop through the information within one page
         for r in result:
-
+            
             # Find title and image url, append to the list we made
             title = r.find('h2', class_='title').text
             img_url = r.find('img', class_='wide-image')
             img_url = img_url.attrs.get('src', None)
+            img_url = "https://astrogeology.usgs.gov"+img_url
             results_dict = {"title": title, "img_url": img_url}
             hemisphere_image_urls.append(results_dict)
-
-    browser.quit()
-
-    return {
+    
+    scrape_dict = {
         "headline": headline,
         "paragraph": paragraph,
         "featured_image_url": featured_image_url,
         "mars_html": mars_html,
         "hemisphere_image_urls": hemisphere_image_urls
     }
+
+    browser.quit()
+
+    return scrape_dict
